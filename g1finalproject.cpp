@@ -1012,6 +1012,7 @@ public:
         map<string, int> categoryTransactionCount;
         double highestTransaction = 0.0;
         double lowestTransaction = numeric_limits<double>::max();
+        bool hasTransactions = false;
         
         cout << "\n=== System-Wide Analytics Report ===\n";
         cout << "Total Registered Users: " << totalUsers << "\n\n";
@@ -1041,6 +1042,11 @@ public:
             }
         }
 
+        if (!hasTransactions) {
+        cout << "No transactions recorded in the system.\n";
+        sysclear();
+        return;
+    }
         // Calculate averages and percentages
         double avgTransactionAmount = totalTransactions > 0 ? totalSystemExpenses / totalTransactions : 0;
         double avgUserExpense = totalUsers > 0 ? totalSystemExpenses / totalUsers : 0;
