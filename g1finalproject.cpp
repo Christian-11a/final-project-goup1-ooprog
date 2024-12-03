@@ -12,21 +12,24 @@
 
 using namespace std;
 
+// Function to check if a file is empty
 bool isFileEmpty(const string& filename) {
     ifstream file(filename, ios::ate);
     return file.tellg() == 0;
 }
 
+// Function to pause and clearing screen
 void sysclear(){
 	system("pause");
     system("cls");
 }
 
+// Input validation function for menu
 int getValidatedChoice(int minChoice, int maxChoice) {
     string input;
     while (true) {
         cout << "Enter your choice: ";
-        getline(cin, input); // Get the entire line as input
+        getline(cin, input); 
 
         // Check if the input is empty or contains only whitespace
         if (input.empty() || input.find_first_not_of(' ') == string::npos) {
@@ -59,13 +62,13 @@ int getValidatedChoice(int minChoice, int maxChoice) {
             }
         }
 
-        // If we reach here, the input was invalid
         cout << "Invalid input. Please enter a number between " << minChoice << " and " << maxChoice << ".\n";
         sysclear();
         return -1;
     }
 }
 
+// Input validation function for double inputs
 double getValidatedDouble(const string& prompt, double minValue) {
     double value;
     while (true) {
@@ -84,30 +87,33 @@ double getValidatedDouble(const string& prompt, double minValue) {
     }
 }
 
-
+// For storing account information
 struct Account {
     int userID;
     string username;
     string password;
 };
 
+//For storing transaction details
 struct Transaction {
     int transactionID;
     string category;
     string itemname;
     string type;
     int qty;
-    double price; // New field for price per unit
+    double price; 
     double amount;
 };
 
+// Class that use Singleton pattern for user management
 class ManageAccount {
 private:
-    static ManageAccount* instance;
+    static ManageAccount* instance; //Singleton here
     int userID = 1;
-    int currentUserID; // Track current user's ID
+    int currentUserID; 
 
-    ManageAccount() {
+    // Private constructor
+    ManageAccount() { 
         // Load userID
         ifstream idFile("userID.txt");
         if (idFile.is_open()) {
@@ -118,8 +124,10 @@ private:
         // Load accounts
         loadAccounts();
     }
-    friend class Admin;
+
+    friend class Admin; // For admin class to have special access
 public:
+    // The getter function
     static ManageAccount* getInstance() {
         if (!instance) {
             instance = new ManageAccount();
@@ -131,6 +139,7 @@ public:
     vector<Account> accounts;
     string username, password;
 
+    // For loading all accounts
     void loadAccounts() {
         accounts.clear();
         ifstream accountFile("accounts.txt");
@@ -152,6 +161,8 @@ public:
     int getCurrentUserID() const {
         return currentUserID;
     }
+    
+    // For updating file in the current data
     void overwriteAccountsFile() {
         ofstream file("accounts.txt");
         if (file.is_open()) {
@@ -170,6 +181,7 @@ public:
         }
     }
 
+    // For saving userID
     void saveUserID() {
         ofstream file("userID.txt");
         if (file.is_open()) {
@@ -178,6 +190,7 @@ public:
         }
     }
 
+    // For adding new user to account file
     void saveUserToFile(int id, const string& username, const string& password) {
         string accountFile = "accounts.txt";
         ofstream file(accountFile, ios::app);
@@ -196,6 +209,7 @@ public:
         }
     }
 
+    // For creating account of regular user
     void createAccount() {
         cout << "Enter Username (minimum 4 characters): ";
         getline(cin, username);
@@ -227,6 +241,7 @@ public:
             return;
         }
 
+        // For saving the account into the file
         accounts.push_back({userID, username, password});
         saveUserToFile(userID, username, password);
 
@@ -235,6 +250,8 @@ public:
 
         cout << "Account created successfully!\n";
     }
+    
+    // For Login
     virtual void logIn() {
         bool ok = false;
         while (!ok) {
@@ -244,11 +261,12 @@ public:
             getline(cin, password);
 
             loadAccounts();
-
+            
+            // For admin login
             if (username == "Admin" && password == "1234") {
                 cout << "Admin login successful!" << endl;
                 loggedInUser = "Admin";
-                currentUserID = 0; // Admin ID
+                currentUserID = 0; 
                 ok = true;
             } else {
                 for (const auto& account : accounts) {
@@ -275,12 +293,15 @@ public:
     }
 };
 
-ManageAccount* ManageAccount::instance = nullptr;
+ManageAccount* ManageAccount::instance = nullptr; // Initialize the static instance pointer
 
+// Helper class for transactions
 class TransactionHelper {
 public:
+
+// For loading the transaction from the file
  static void loadTransactionsFromFile(int userID, vector<Transaction>& transactions) {
-        transactions.clear(); // Clear any existing transactions in memory
+        transactions.clear(); 
         string filename = to_string(userID) + "_transactions.txt";
         ifstream file(filename);
 
@@ -335,6 +356,7 @@ public:
         }
     }
 
+    // For saving the transactions of the user
     static void saveTransactionsToFile(int userID, const vector<Transaction>& transactions) {
         string filename = to_string(userID) + "_transactions.txt";
         ofstream file(filename);
@@ -367,14 +389,20 @@ public:
         file.close();
     }
 };
+
+// Abstract base class for Transaction Strategy Pattern
 class TransactionStrategy {
 public:
     virtual void execute(int userID, vector<Transaction>& transactions) = 0;
+    // Destructor for cleaning up
     virtual ~TransactionStrategy() {}
 };
 
+// Concrete class for adding new transactions
 class AddTransaction : public TransactionStrategy {
 private:
+
+    // Get the current budget from the file
     double getRemainingBudget(int userID) {
         string filename = to_string(userID) + "_budget.txt";
         ifstream file(filename);
@@ -388,6 +416,7 @@ private:
         return remainingBudget;
     }
 
+    // For updating the budget after transactions
     void updateBudget(int userID, double newBudget) {
         string filename = to_string(userID) + "_budget.txt";
         ofstream file(filename);
@@ -398,6 +427,7 @@ private:
     }
 
 public:
+    //Implementing the transaction strategy
     void execute(int userID, vector<Transaction>& transactions) override {
         system("cls");
         double remainingBudget = getRemainingBudget(userID);
@@ -465,6 +495,7 @@ public:
     }
 };
 
+// Concrete class for updating existing transactions
 class UpdateTransaction : public TransactionStrategy {
 private:
     double getRemainingBudget(int userID) {
@@ -585,6 +616,7 @@ public:
     }
 };
 
+// Concrete class for deleting existing transactions
 class DeleteTransaction : public TransactionStrategy {
 private:
     double getRemainingBudget(int userID) {
@@ -649,6 +681,7 @@ public:
     }
 };
 
+// Concrete class for viewing transaction history
 class ViewTransactionHistory : public TransactionStrategy {
 public:
     void execute(int userID, vector<Transaction>& transactions) override {
@@ -665,6 +698,9 @@ public:
         sysclear();
     }
 };
+
+
+// Admin class extends to manageaccount
 class Admin : public ManageAccount {
 private:
     static Admin* instance;
@@ -676,6 +712,8 @@ public:
         }
         return instance;
     }
+
+    // Override the login for providing admin menu
     void logIn() override {
         ManageAccount::getInstance()->logIn();
         
@@ -684,6 +722,7 @@ public:
         }
     }
 
+    // Admin menu options
     void manageAdminMenu() {
     	bool looper = true;
         while (looper) {
@@ -731,6 +770,7 @@ public:
         }
     }
 
+    // User account management
     void manageUser() {
         system("cls");
         int inputUserId;
@@ -805,6 +845,7 @@ public:
         sysclear();
     }
 
+    // Transaction management for all the users
     void manageAllTransactions() {
         system("cls");
         string input;
@@ -862,6 +903,7 @@ public:
     }       
  }
 
+    // Viewing all existing transaction of specific user
     void viewAllTransactions() {
         system("cls");
         for (const auto& account : accounts) {
@@ -882,6 +924,7 @@ public:
         sysclear();
     }
 
+    // Generate financial reports for specific users
     void generateFinancialReports() {
         system("cls");
         int userID;
@@ -957,7 +1000,7 @@ public:
         sysclear();
     }
 
-
+    // System analytics
     void generateSystemWideReports() {
         system("cls");
         // System Statistics
@@ -1061,12 +1104,15 @@ public:
 };
 
 Admin* Admin::instance = nullptr;
+
+// Abstract base class for account operations
 class AccountStrategy {
 public:
     virtual void execute(ManageAccount& manage, vector<Transaction>& transactions) = 0;
     virtual ~AccountStrategy() {}
 };
 
+// For editing account
 class EditAccount : public AccountStrategy {
 public:
     void execute(ManageAccount& manage, vector<Transaction>& transactions) override {
@@ -1141,7 +1187,7 @@ public:
     }
 };
 
-
+// For transactions management and menu
 class ManageTransactions : public AccountStrategy {
 public:
     void execute(ManageAccount& manage, vector<Transaction>& transactions) override {
@@ -1191,6 +1237,8 @@ public:
         }
     }
 };
+
+// For budget management
 class SetMonthlyBudget : public AccountStrategy {
 private:
     double validateBudgetInput(double currentBudget) {
@@ -1277,7 +1325,7 @@ public:
     }
 };
 
-
+// For checking current budget
 class CheckCurrentBudget : public AccountStrategy {
 public:
     void execute(ManageAccount& manage, vector<Transaction>& transactions) override {
@@ -1302,6 +1350,8 @@ public:
         sysclear();
     }
 };
+
+// For generating financial reports
 class GenerateFinancialReports : public AccountStrategy {
 private:
     double getRemainingBudget(int userID) {
