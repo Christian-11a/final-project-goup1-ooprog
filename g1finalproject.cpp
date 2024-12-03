@@ -1025,6 +1025,10 @@ public:
             double userTotalExpense = 0.0;
             
             for (const auto& trans : userTransactions) {
+                if (!hasTransactions) {
+                hasTransactions = true;
+                lowestTransaction = trans.qty * trans.price; // Initialize with first transaction
+            }
                 totalTransactions++;
                 double amount = trans.qty * trans.price;
                 
